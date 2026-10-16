@@ -1,6 +1,6 @@
 ﻿; ArkoClick installer (Inno Setup 6).
 ; Build:  "D:\programs\InnoSetup6\ISCC.exe" installer\ArkoClick.iss
-; Output: dist\ArkoClick-Setup-<version>.exe
+; Output: dist\ArkoClick-Setup.exe
 ;
 ; Per-user install (no administrator rights, no UAC prompt), English + Arabic wizard,
 ; Start-menu and optional desktop shortcuts, optional "start with Windows", clean uninstall.
@@ -30,7 +30,8 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
 OutputDir=..\dist
-OutputBaseFilename=ArkoClick-Setup-{#AppVersion}
+; Version-less name so README links to releases/latest/download/ArkoClick-Setup.exe keep working.
+OutputBaseFilename=ArkoClick-Setup
 SetupIconFile=..\assets\icon.ico
 UninstallDisplayIcon={app}\{#AppExe}
 UninstallDisplayName={#AppName}

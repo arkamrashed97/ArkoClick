@@ -1,12 +1,69 @@
 <p align="center"><img src="assets/logo.svg" width="128" alt="ArkoClick logo"></p>
 
-# ArkoClick
+<h1 align="center">ArkoClick</h1>
 
-**Developer:** Arkam Rashed  
-**Email:** arko313m@gmail.com  
-**Phone / WhatsApp:** +201008446123
+<p align="center"><b>Free auto clicker for Windows that keeps clicking inside a window, even when it's minimized or covered, and leaves your mouse free.</b></p>
 
-Multi-target background auto clicker for Windows, written in Rust (egui + Win32). Version 0.2.0.
+<p align="center">
+  <a href="https://github.com/arkamrashed97/ArkoClick/releases/latest/download/ArkoClick-Setup.exe"><img src="https://img.shields.io/badge/Download-Installer%20%28recommended%29-2B5464?style=for-the-badge&logo=windows&logoColor=white" alt="Download the installer"></a>
+  &nbsp;
+  <a href="https://github.com/arkamrashed97/ArkoClick/releases/latest/download/ArkoClick-portable.zip"><img src="https://img.shields.io/badge/Download-Portable%20zip-4E9C93?style=for-the-badge" alt="Download the portable zip"></a>
+</p>
+
+<p align="center">Windows 10 / 11 (64-bit) · Free · English & العربية · <a href="https://github.com/arkamrashed97/ArkoClick/releases">All versions</a> · <a href="#بالعربي">بالعربي</a></p>
+
+<p align="center">
+  <img src="docs/screenshot-en.png" width="49%" alt="ArkoClick in English, day mode">
+  <img src="docs/screenshot-ar.png" width="49%" alt="ArkoClick in Arabic, night mode">
+</p>
+
+## Install
+
+1. Click **Download Installer** above and open `ArkoClick-Setup.exe`.
+2. If Windows shows a blue **"Windows protected your PC"** box, click **More info**, then **Run anyway**. (ArkoClick isn't code-signed yet; this is expected.)
+3. Follow the installer. No administrator rights are needed.
+
+Prefer not to install? Download the **portable zip**, unzip it anywhere, and run `ArkoClick.exe`.
+
+## Use it in 3 steps
+
+1. Open ArkoClick. In the **Simple clicker** tab press **Choose the spot on screen**, then click the place you want clicked.
+2. Choose a speed, for example **Normal · 5/sec**.
+3. Press **Start**. Press **Stop** or **F6** to stop, or **F8** to stop everything at once.
+
+You can keep working while it clicks. Minimize the window or put it behind others and ArkoClick keeps going.
+Try it first with **ArkoClick test page** in the Start menu: choose its green circle as the spot and watch the counter.
+
+## بالعربي
+
+<div dir="rtl">
+
+**ArkoClick** برنامج نقر تلقائي مجاني لويندوز. يضغط داخل النافذة التي تختارها حتى لو كانت مصغّرة أو خلف نوافذ أخرى، ويبقى الماوس حرًا لك.
+
+**التحميل:**
+[تحميل برنامج التثبيت (موصى به)](https://github.com/arkamrashed97/ArkoClick/releases/latest/download/ArkoClick-Setup.exe)
+·
+[تحميل النسخة المحمولة](https://github.com/arkamrashed97/ArkoClick/releases/latest/download/ArkoClick-portable.zip)
+
+**التثبيت:**
+1. افتح ملف `ArkoClick-Setup.exe`.
+2. إذا ظهر تحذير أزرق من ويندوز، اضغط **More info** ثم **Run anyway**.
+3. أكمل التثبيت، ولا يحتاج إلى صلاحيات المسؤول.
+
+**الاستخدام:**
+1. في تبويب «النقر البسيط» اضغط «اختر المكان على الشاشة» ثم انقر على المكان المطلوب.
+2. اختر السرعة.
+3. اضغط «تشغيل»، وللإيقاف اضغط «إيقاف» أو F6، وF8 يوقف كل شيء.
+
+</div>
+
+## Contact
+
+**Arkam Rashed** · arko313m@gmail.com · WhatsApp [+201008446123](https://wa.me/201008446123)
+
+---
+
+# Details
 
 ## Made for everyone
 
@@ -96,16 +153,17 @@ Needs [Inno Setup 6](https://jrsoftware.org/isinfo.php):
 ISCC.exe installer\ArkoClick.iss
 ```
 
-Builds `dist/ArkoClick-Setup-<version>.exe` from `dist/ArkoClick.exe` (copy the release build
+Builds `dist/ArkoClick-Setup.exe` from `dist/ArkoClick.exe` (copy the release build
 there first). Per-user install to `%LOCALAPPDATA%\Programs\ArkoClick` (no administrator
 rights), English or Arabic wizard, Start-menu entries (app, test page, uninstall), optional
 desktop shortcut and "start with Windows", and a short guide shown at the end
 (`installer/guide-*.txt`). Uninstall removes everything, including the startup entry. The
 exe and installer are not code-signed, so Windows SmartScreen warns on first run.
 
-`dist/` holds a ready-to-run `ArkoClick.exe` (about 4.3 MB, no runtime needed) and the test
-page `ArkoClick-TestTarget.html` (source in `test-target/`). The page counts clicks, key
-presses and typed characters, and mirrors the counters into its window title.
+Release files keep fixed names (`ArkoClick-Setup.exe`, `ArkoClick-portable.zip`) so the
+download buttons at the top always point at the newest release. The test page
+(`test-target/ArkoClick-TestTarget.html`) counts clicks, key presses and typed characters,
+and mirrors the counters into its window title.
 
 Tests create real Win32 windows and verify: clicks reach the right child control at the right
 coordinates, delivery while minimized and while hidden, minimize-to-hidden and back on stop,

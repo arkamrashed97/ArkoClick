@@ -599,7 +599,7 @@ impl App {
         let mut toggle_lang = false;
         let mut toggle_theme = false;
         tr.row(ui, |ui| {
-            theme::paint_logo(ui, 30.0);
+            theme::paint_logo(ui, 34.0);
             ui.label(semibold(APP_TITLE).size(size + 8.0));
             ui.label(RichText::new(format!("v{APP_VERSION}")).small().color(muted_color(ui)));
             ui.add_space(10.0);

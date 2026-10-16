@@ -52,7 +52,7 @@ fn main() -> eframe::Result<()> {
             .with_title(APP_TITLE)
             .with_inner_size([960.0, 720.0])
             .with_min_inner_size([760.0, 520.0])
-            .with_icon(Arc::new(egui::IconData { rgba: ui::theme::logo_rgba(64), width: 64, height: 64 }))
+            .with_icon(Arc::new(egui::IconData { rgba: ui::theme::LOGO_64.to_vec(), width: 64, height: 64 }))
             .with_visible(!start_hidden),
         vsync: true,
         ..Default::default()

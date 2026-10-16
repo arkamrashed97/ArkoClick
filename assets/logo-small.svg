@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- Simplified ArkoClick mark for 16-24 px: bigger pointer, one ripple, thicker strokes. -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4E9C93"/>
+      <stop offset="1" stop-color="#2B5464"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="256" height="256" rx="56" fill="url(#tile)"/>
+  <circle cx="78" cy="78" r="50" fill="none" stroke="#CDEBE3" stroke-opacity="0.6" stroke-width="20"/>
+  <circle cx="78" cy="78" r="18" fill="#F6C99A"/>
+  <path d="M84 86 L84 230 L120 196 L146 250 L180 234 L154 180 L204 178 Z"
+        fill="#FBF7F0" stroke="#21414C" stroke-width="14" stroke-linejoin="round"/>
+</svg>

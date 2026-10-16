@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/logo.svg" width="128" alt="ArkoClick logo"></p>
+
 # ArkoClick
 
 **Developer:** Arkam Rashed  
@@ -139,6 +141,7 @@ src/
 tests/background_click.rs   end-to-end Win32 tests
 examples/chrome_probe.rs    Chromium delivery measurement
 examples/picker_demo.rs     opens the picker overlay (Arabic hint) for visual checks
+examples/make_icons.rs      renders assets/logo.svg into icon.ico and the embedded logo images
 test-target/                click/key/text counter page
 ```
 

@@ -44,6 +44,10 @@ features = [
     "Win32_Security",
 ]
 
+[dev-dependencies]
+# Only for examples/make_icons.rs (renders assets/logo.svg into the icon files).
+resvg = "0.48"
+
 [build-dependencies]
 embed-resource = "3"
 

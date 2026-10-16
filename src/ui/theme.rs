@@ -167,45 +167,18 @@ pub fn card_fill(ui: &egui::Ui) -> Color32 {
     }
 }
 
-/// The ArkoClick mark: dark disc, two green rings, crosshair.
-pub fn paint_logo(ui: &mut egui::Ui, size: f32) {
-    let (rect, _) = ui.allocate_exact_size(egui::vec2(size, size), egui::Sense::hover());
-    let p = ui.painter();
-    let c = rect.center();
-    let r = size / 2.0;
-    p.circle_filled(c, r, Color32::from_rgb(0x1E, 0x25, 0x33));
-    let w = (size * 0.08).max(1.5);
-    p.circle_stroke(c, r * 0.78, Stroke::new(w, ACCENT));
-    p.circle_stroke(c, r * 0.45, Stroke::new(w, ACCENT));
-    p.line_segment([c - egui::vec2(r * 0.9, 0.0), c + egui::vec2(r * 0.9, 0.0)], Stroke::new(w * 0.8, ACCENT));
-    p.line_segment([c - egui::vec2(0.0, r * 0.9), c + egui::vec2(0.0, r * 0.9)], Stroke::new(w * 0.8, ACCENT));
-    p.circle_filled(c, r * 0.14, ACCENT);
-}
+/// The ArkoClick logo, rendered from assets/logo.svg by `cargo run --example make_icons`.
+pub const LOGO_64: &[u8] = include_bytes!("../../assets/logo-64.rgba");
+const LOGO_128: &[u8] = include_bytes!("../../assets/logo-128.rgba");
 
-/// Same mark rendered into RGBA pixels, for the window/taskbar icon.
-pub fn logo_rgba(n: u32) -> Vec<u8> {
-    let mut out = Vec::with_capacity((n * n * 4) as usize);
-    let c = (n as f32 - 1.0) / 2.0;
-    let r = n as f32 / 2.0;
-    let nf = n as f32;
-    for y in 0..n {
-        for x in 0..n {
-            let (dx, dy) = (x as f32 - c, y as f32 - c);
-            let d = (dx * dx + dy * dy).sqrt();
-            let px = if d > r - 0.5 {
-                [0, 0, 0, 0]
-            } else {
-                let ring = (d - r * 0.78).abs() < nf * 0.045 || (d - r * 0.45).abs() < nf * 0.045;
-                let cross = (dx.abs() < nf * 0.03 && dy.abs() < r * 0.9) || (dy.abs() < nf * 0.03 && dx.abs() < r * 0.9);
-                let dot = d < nf * 0.07;
-                if ring || cross || dot {
-                    [0x2E, 0xCC, 0x71, 255]
-                } else {
-                    [0x1E, 0x25, 0x33, 255]
-                }
-            };
-            out.extend_from_slice(&px);
-        }
-    }
-    out
+/// Draw the logo (loaded into a texture once, then cached by egui).
+pub fn paint_logo(ui: &mut egui::Ui, size: f32) {
+    let tex = ui.ctx().data_mut(|d| d.get_temp::<egui::TextureHandle>(egui::Id::new("arkoclick-logo")));
+    let tex = tex.unwrap_or_else(|| {
+        let img = egui::ColorImage::from_rgba_unmultiplied([128, 128], LOGO_128);
+        let t = ui.ctx().load_texture("arkoclick-logo", img, egui::TextureOptions::LINEAR);
+        ui.ctx().data_mut(|d| d.insert_temp(egui::Id::new("arkoclick-logo"), t.clone()));
+        t
+    });
+    ui.add(egui::Image::new((tex.id(), egui::vec2(size, size))));
 }

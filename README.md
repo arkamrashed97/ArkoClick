@@ -145,7 +145,12 @@ test-target/                click/key/text counter page
 ## Credits
 
 Picker and tray approach adapted from
-[xiaobainiuniu/auto-clicker](https://github.com/xiaobainiuniu/auto-clicker) (MIT).
+[xiaobainiuniu/auto-clicker](https://github.com/xiaobainiuniu/auto-clicker) (MIT, see
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)).
 Background-click technique informed by
 [PriyanshuGeTRekT/WinClicker](https://github.com/PriyanshuGeTRekT/WinClicker) (C#, MIT) and
 [Cling2223/auto-clicker](https://github.com/Cling2223/auto-clicker).
+
+## License
+
+MIT, see [LICENSE](LICENSE).

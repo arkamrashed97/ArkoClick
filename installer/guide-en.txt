@@ -1,0 +1,23 @@
+﻿ArkoClick is installed.
+
+How to use it in 3 steps:
+
+1) Open ArkoClick from the desktop or the Start menu.
+
+2) In the "Simple clicker" tab press "Choose the spot on screen", then click the place you want ArkoClick to click.
+
+3) Choose a speed and press "Start". To stop, press "Stop" or the F6 key.
+
+Good to know:
+- Keep using your computer: ArkoClick never moves your mouse.
+- It keeps working even if the window is minimized or behind other windows.
+- The "Keyboard" tab presses a key or types a text automatically.
+- Change the language or switch to night mode with the buttons at the top.
+- F8 stops everything immediately.
+
+To try it: open "ArkoClick test page" from the Start menu, choose the green circle as the spot, and watch the counter.
+
+Help:
+Arkam Rashed
+arko313m@gmail.com
+WhatsApp: +201008446123

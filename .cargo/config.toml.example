@@ -1,0 +1,14 @@
+# Copy this file to .cargo/config.toml and adjust the paths for your machine.
+# Only needed for the GNU toolchain (x86_64-pc-windows-gnu); MSVC builds need nothing.
+
+# The GNU toolchain's dlltool fails on paths that contain spaces. If this project's folder
+# has a space in its path, send the build output somewhere without one:
+[build]
+target-dir = "C:/arkoclick-target"
+
+# The windows crate links through raw-dylib, which needs a full binutils (dlltool + as).
+# Rust's bundled self-contained MinGW lacks `as`, so point at a real MinGW-w64 install
+# (e.g. WinLibs). Also put its bin folder on PATH so `windres` embeds the icon/manifest.
+[target.x86_64-pc-windows-gnu]
+linker = "C:/mingw64/bin/gcc.exe"
+rustflags = ["-C", "dlltool=C:/mingw64/bin/dlltool.exe"]

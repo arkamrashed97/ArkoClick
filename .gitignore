@@ -1,0 +1,8 @@
+/target
+*.log
+
+# Machine-specific toolchain paths (see .cargo/config.toml.example)
+/.cargo/config.toml
+
+# Build outputs (exe, installer, portable zip) go to GitHub Releases, not the repository
+/dist/

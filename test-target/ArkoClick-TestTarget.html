@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ArkoClick Test Target</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: #141821; color: #e8ecf1; }
+  header { padding: 14px 20px; border-bottom: 1px solid #2a3140; display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap; }
+  header h1 { font-size: 18px; margin: 0; }
+  header small { color: #8a94a6; }
+  main { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; }
+  @media (max-width: 760px) { main { grid-template-columns: 1fr; } }
+  .card { background: #1c2230; border: 1px solid #2a3140; border-radius: 10px; padding: 16px; }
+  .card h2 { font-size: 14px; margin: 0 0 10px; color: #8a94a6; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  #target { height: 260px; border-radius: 10px; display: grid; place-items: center; cursor: crosshair; user-select: none;
+            background: radial-gradient(circle at center, #2ecc71 0 36px, #1f8a4c 36px 40px, #203045 40px); border: 2px dashed #3b4a63; position: relative; }
+  #target.flash { background: radial-gradient(circle at center, #ffffff 0 36px, #2ecc71 36px 40px, #2b4a3a 40px); }
+  #count { font-size: 64px; font-weight: 700; line-height: 1; }
+  #cps { color: #8a94a6; }
+  .stats { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; }
+  .stats b { color: #8a94a6; font-weight: 500; }
+  .ok { color: #2ecc71; } .warn { color: #f39c12; } .bad { color: #e74c3c; }
+  #log { height: 220px; overflow: auto; font: 12px/1.5 Consolas, monospace; background: #0f131a; border-radius: 8px; padding: 8px; }
+  button.small { background: #2a3140; color: #e8ecf1; border: 0; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+  .row { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
+  .marker { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: #ff5050; transform: translate(-50%, -50%); pointer-events: none; }
+  .dir { direction: rtl; text-align: right; color: #8a94a6; font-size: 13px; margin-top: 6px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>ArkoClick Test Target</h1>
+  <small>Open this page, point an ArkoClick clicker at the green circle, then cover or minimize the browser.</small>
+</header>
+<main>
+  <section class="card">
+    <h2>Target</h2>
+    <div id="target"><div><div id="count">0</div><div id="cps">0.0 clicks/s</div></div></div>
+    <div class="row">
+      <button class="small" id="reset">Reset</button>
+      <label><input type="checkbox" id="beep"> beep on click</label>
+      <span id="vis" class="warn">visibility: visible</span>
+    </div>
+    <p class="dir">افتح الصفحة في Chrome أو Edge، اختار الدايرة الخضراء من ArkoClick بزر "Pick on screen"، ثم استخدم "Hide window (keep running)" بدل التصغير وراقب العدّاد.</p>
+  </section>
+  <section class="card">
+    <h2>Keyboard &amp; text steps</h2>
+    <div class="stats">
+      <b>Key presses</b><span id="keys">0</span>
+      <b>Last key</b><span id="lastKey">-</span>
+    </div>
+    <textarea id="typed" rows="4" autofocus placeholder="Click here once so Key / Text steps type into this box"
+      style="width:100%;margin-top:10px;box-sizing:border-box;background:#0f131a;color:#e8ecf1;border:1px solid #2a3140;border-radius:8px;padding:8px;font:14px 'Segoe UI'"></textarea>
+    <p class="dir">اضغط مرة جوه المربع ده، وبعدين خطوات Key و Text في ArkoClick هتكتب فيه حتى لو المتصفح مخفي.</p>
+  </section>
+  <section class="card">
+    <h2>Whole-page clicks</h2>
+    <div class="stats">
+      <b>Anywhere on page</b><span id="pageClicks">0</span>
+      <b>On the target</b><span id="targetClicks">0</span>
+    </div>
+  </section>
+  <section class="card">
+    <h2>Last click</h2>
+    <div class="stats">
+      <b>Button</b><span id="btn">-</span>
+      <b>Type</b><span id="type">-</span>
+      <b>Position in target</b><span id="pos">-</span>
+      <b>Page visible</b><span id="visState">yes</span>
+      <b>isTrusted</b><span id="trusted">-</span>
+      <b>Received at</b><span id="time">-</span>
+      <b>Gap since previous</b><span id="gap">-</span>
+    </div>
+    <h2 style="margin-top:16px">Log</h2>
+    <div id="log"></div>
+  </section>
+</main>
+<script>
+(function () {
+  const target = document.getElementById('target');
+  const countEl = document.getElementById('count');
+  const cpsEl = document.getElementById('cps');
+  const log = document.getElementById('log');
+  const vis = document.getElementById('vis');
+  let count = 0, last = 0, times = [];
+  const fmt = t => new Date(t).toLocaleTimeString() + '.' + String(Math.floor(t % 1000)).padStart(3, '0');
+
+  function record(e, kind) {
+    const now = performance.timeOrigin + performance.now();
+    count++;
+    countEl.textContent = count;
+    times.push(now); times = times.filter(t => now - t <= 2000);
+    cpsEl.textContent = (times.length / 2).toFixed(1) + ' clicks/s';
+    const r = target.getBoundingClientRect();
+    const x = Math.round(e.clientX - r.left), y = Math.round(e.clientY - r.top);
+    document.getElementById('btn').textContent = ['left', 'middle', 'right'][e.button] || e.button;
+    document.getElementById('type').textContent = kind;
+    document.getElementById('pos').textContent = x + ', ' + y + '  (of ' + Math.round(r.width) + 'x' + Math.round(r.height) + ')';
+    document.getElementById('visState').textContent = document.visibilityState === 'visible' ? 'yes' : 'NO (hidden / minimized) - clicks still arriving';
+    document.getElementById('visState').className = document.visibilityState === 'visible' ? 'ok' : 'warn';
+    document.getElementById('trusted').textContent = e.isTrusted;
+    document.getElementById('time').textContent = fmt(now);
+    document.getElementById('gap').textContent = last ? Math.round(now - last) + ' ms' : '-';
+    last = now;
+    const m = document.createElement('div'); m.className = 'marker'; m.style.left = x + 'px'; m.style.top = y + 'px';
+    target.appendChild(m); setTimeout(() => m.remove(), 800);
+    target.classList.add('flash'); setTimeout(() => target.classList.remove('flash'), 80);
+    const line = document.createElement('div');
+    line.textContent = '#' + count + '  ' + fmt(now) + '  ' + kind + ' ' + (['L', 'M', 'R'][e.button] || e.button) + '  @ ' + x + ',' + y + (document.hidden ? '  [page hidden]' : '');
+    log.prepend(line); while (log.childElementCount > 300) log.lastChild.remove();
+    if (document.getElementById('beep').checked) beep();
+  }
+  target.addEventListener('mousedown', e => record(e, 'mousedown'));
+  // Counters mirrored into the window title so tools can read them without screenshots.
+  let pageClicks = 0, keys = 0;
+  const typedBox = document.getElementById('typed');
+  const syncTitle = () => { document.title = 'ArkoClick Test Target | clicks ' + pageClicks + ' | target ' + count + ' | keys ' + keys + ' | typed ' + [...typedBox.value].length; };
+  typedBox.addEventListener('input', syncTitle);
+  // Focus the box on load so Key / Text steps have somewhere to type even if the
+  // browser window has never been clicked.
+  window.addEventListener('load', () => typedBox.focus());
+  document.addEventListener('mousedown', () => { pageClicks++; document.getElementById('pageClicks').textContent = pageClicks; document.getElementById('targetClicks').textContent = count; syncTitle(); }, true);
+  document.addEventListener('keydown', e => { keys++; document.getElementById('keys').textContent = keys; document.getElementById('lastKey').textContent = e.key + ' (' + e.code + ')'; syncTitle(); }, true);
+  syncTitle();
+  target.addEventListener('dblclick', e => { const l = document.createElement('div'); l.textContent = '   dblclick detected'; log.prepend(l); });
+  target.addEventListener('contextmenu', e => e.preventDefault());
+  document.getElementById('reset').addEventListener('click', () => { count = 0; last = 0; times = []; pageClicks = 0; keys = 0; countEl.textContent = '0'; cpsEl.textContent = '0.0 clicks/s'; log.innerHTML = ''; document.getElementById('typed').value = ''; syncTitle(); });
+  document.addEventListener('visibilitychange', () => {
+    vis.textContent = 'visibility: ' + document.visibilityState;
+    vis.className = document.visibilityState === 'visible' ? 'ok' : 'warn';
+    const l = document.createElement('div'); l.textContent = '-- page became ' + document.visibilityState + ' at ' + fmt(performance.timeOrigin + performance.now()); log.prepend(l);
+  });
+  vis.className = 'ok';
+  let ac;
+  function beep() { try { ac = ac || new AudioContext(); const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = 880; g.gain.value = 0.05; o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + 0.04); } catch (_) {} }
+})();
+</script>
+</body>
+</html>

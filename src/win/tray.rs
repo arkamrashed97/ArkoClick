@@ -11,7 +11,8 @@ use windows::core::PCWSTR;
 use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, POINT, WPARAM};
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::UI::Shell::{
-    Shell_NotifyIconW, NIF_ICON, NIF_MESSAGE, NIF_TIP, NIM_ADD, NIM_DELETE, NIM_MODIFY, NOTIFYICONDATAW,
+    Shell_NotifyIconW, NIF_ICON, NIF_INFO, NIF_MESSAGE, NIF_TIP, NIIF_INFO, NIM_ADD, NIM_DELETE, NIM_MODIFY,
+    NIN_BALLOONUSERCLICK, NOTIFYICONDATAW,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
     AppendMenuW, CreatePopupMenu, CreateWindowExW, DefWindowProcW, DestroyMenu, DestroyWindow, DispatchMessageW,
@@ -24,6 +25,7 @@ use windows::Win32::UI::WindowsAndMessaging::{
 const TRAY_ID: u32 = 1;
 const CALLBACK_MSG: u32 = WM_APP + 1;
 const WM_UPDATE_TIP: u32 = WM_APP + 2;
+const WM_SHOW_NOTIFICATION: u32 = WM_APP + 3;
 
 const ID_SHOW: usize = 1;
 const ID_START_ALL: usize = 2;
@@ -59,6 +61,19 @@ pub fn show_main_window() {
 }
 
 /// Update the tooltip (e.g. "ArkoClick - 2 running"). Safe from any thread.
+/// Show a Windows notification from the tray icon (e.g. "update available"). Clicking it
+/// opens the main window. Safe from any thread.
+pub fn notify(title: &str, body: &str) {
+    let h = TRAY_HWND.load(Ordering::Acquire);
+    if h == 0 {
+        return;
+    }
+    let boxed = Box::new((title.to_string(), body.to_string()));
+    unsafe {
+        let _ = PostMessageW(HWND(h as *mut _), WM_SHOW_NOTIFICATION, WPARAM(0), LPARAM(Box::into_raw(boxed) as isize));
+    }
+}
+
 pub fn set_tooltip(text: &str) {
     let h = TRAY_HWND.load(Ordering::Acquire);
     if h == 0 {
@@ -183,8 +198,27 @@ unsafe extern "system" fn wnd_proc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam:
             match lparam.0 as u32 {
                 WM_LBUTTONUP => show_main_window(),
                 WM_RBUTTONUP => show_menu(hwnd),
+                NIN_BALLOONUSERCLICK => show_main_window(),
                 _ => {}
             }
+            LRESULT(0)
+        }
+        WM_SHOW_NOTIFICATION => {
+            let msg: Box<(String, String)> = Box::from_raw(lparam.0 as *mut (String, String));
+            let mut nid = NOTIFYICONDATAW::default();
+            nid.cbSize = std::mem::size_of::<NOTIFYICONDATAW>() as u32;
+            nid.hWnd = hwnd;
+            nid.uID = TRAY_ID;
+            nid.uFlags = NIF_INFO;
+            nid.dwInfoFlags = NIIF_INFO;
+            for (i, u) in msg.0.encode_utf16().take(63).enumerate() {
+                nid.szInfoTitle[i] = u;
+            }
+            for (i, u) in msg.1.encode_utf16().take(255).enumerate() {
+                nid.szInfo[i] = u;
+            }
+            let ok = Shell_NotifyIconW(NIM_MODIFY, &nid).as_bool();
+            log::info!("tray notification shown={ok}: {}", msg.0);
             LRESULT(0)
         }
         WM_UPDATE_TIP => {

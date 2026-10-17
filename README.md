@@ -33,6 +33,8 @@ Prefer not to install? Download the **portable zip**, unzip it anywhere, and run
 
 You can keep working while it clicks. Minimize the window or put it behind others and ArkoClick keeps going.
 
+ArkoClick tells you when a new version is out (a banner in the app and a Windows notification) and can download and install it for you in one click.
+
 Want a classic auto clicker that clicks wherever your mouse is instead? Use the **Classic clicker** tab: set a shortcut such as **F7**, move the mouse anywhere, and press the shortcut to start or stop.
 Try it first with **ArkoClick test page** in the Start menu: choose its green circle as the spot and watch the counter.
 
@@ -56,6 +58,8 @@ Try it first with **ArkoClick test page** in the Start menu: choose its green ci
 1. في تبويب «النقر البسيط» اضغط «اختر المكان على الشاشة» ثم انقر على المكان المطلوب.
 2. اختر السرعة.
 3. اضغط «تشغيل»، وللإيقاف اضغط «إيقاف» أو F6، وF8 يوقف كل شيء.
+
+**التحديث:** يخبرك ArkoClick عند صدور إصدار جديد (شريط داخل البرنامج وإشعار من ويندوز)، ويمكنه تنزيله وتثبيته بضغطة واحدة.
 
 **النقر الكلاسيكي:** تبويب «النقر الكلاسيكي» ينقر في مكان مؤشر الماوس أينما حركته. عيّن له اختصارًا مثل F7، ثم اضغطه للتشغيل أو الإيقاف.
 
@@ -100,6 +104,10 @@ Try it first with **ArkoClick test page** in the Start menu: choose its green ci
 - **Many clickers at once**, on different windows or the same one, all driven by **one
   scheduler thread** (a min-heap of deadlines on a condvar). Idle CPU is zero.
 - **Profiles**: named sets of clickers (New / Copy / Rename / Delete) to switch between.
+- **Updates**: checks GitHub's latest release at startup and daily (can be turned off in
+  Settings), shows a banner and a Windows notification, then downloads the installer through
+  Windows' own `curl.exe`, verifies its SHA-256 against the checksum GitHub publishes, and
+  runs it; the installer waits for ArkoClick to close and reopens it when done.
 - **Hotkeys**: global start/stop-all and emergency stop, plus an optional hotkey per
   clicker. Shortcuts are recorded by pressing them (Ctrl / Alt / Shift supported).
 - **Launch with Windows** (HKCU Run key), start hidden in the tray, tray menu (start/stop

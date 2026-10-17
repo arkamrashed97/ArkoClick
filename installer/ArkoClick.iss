@@ -6,7 +6,7 @@
 ; Start-menu and optional desktop shortcuts, optional "start with Windows", clean uninstall.
 
 #define AppName "ArkoClick"
-#define AppVersion "0.3.0"
+#define AppVersion "0.4.0"
 #define AppPublisher "Arkam Rashed"
 #define AppExe "ArkoClick.exe"
 #define AppContact "arko313m@gmail.com"
@@ -42,8 +42,6 @@ WizardStyle=modern
 DisableDirPage=yes
 DisableReadyPage=yes
 ShowLanguageDialog=auto
-; The app holds this mutex while running (see src/main.rs); setup asks to close it first.
-AppMutex=ArkoClick.SingleInstance
 VersionInfoVersion={#AppVersion}.0
 VersionInfoCompany={#AppPublisher}
 VersionInfoDescription={#AppName} Setup
@@ -60,6 +58,8 @@ english.StartWithWindows=Start ArkoClick when Windows starts
 arabic.StartWithWindows=تشغيل ArkoClick مع بدء تشغيل ويندوز
 english.ExtraTasks=Extra options:
 arabic.ExtraTasks=خيارات إضافية:
+english.CloseApp=ArkoClick is running. Close it (right-click its icon near the clock, then Exit) and press OK.
+arabic.CloseApp=برنامج ArkoClick يعمل الآن. أغلقه (انقر بزر الماوس الأيمن على أيقونته بجوار الساعة ثم خروج) واضغط موافق.
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
@@ -83,8 +83,38 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent
+; Started by ArkoClick's updater (/UPDATE=1): reopen the app when done.
+Filename: "{app}\{#AppExe}"; Flags: nowait; Check: IsUpdateRun
 
 [Code]
+function IsUpdateRun: Boolean;
+begin
+  Result := ExpandConstant('{param:UPDATE|0}') = '1';
+end;
+
+// The app holds this mutex while running (see src/main.rs). When the updater starts setup,
+// the app is quitting, so wait a few seconds for it before asking the user.
+function InitializeSetup: Boolean;
+var
+  Tries: Integer;
+begin
+  Result := True;
+  Tries := 0;
+  while CheckForMutexes('ArkoClick.SingleInstance') and (Tries < 40) do
+  begin
+    Sleep(250);
+    Tries := Tries + 1;
+  end;
+  while CheckForMutexes('ArkoClick.SingleInstance') do
+  begin
+    if SuppressibleMsgBox(CustomMessage('CloseApp'), mbError, MB_OKCANCEL, IDCANCEL) = IDCANCEL then
+    begin
+      Result := False;
+      Exit;
+    end;
+  end;
+end;
+
 // The app can turn "start with Windows" on by itself, so always remove that entry on
 // uninstall, not only when the installer created it.
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);

@@ -181,6 +181,9 @@ impl App {
                             });
                         }
 
+                        // Updates
+                        self.updates_card(ui, ctx);
+
                         // About
                         card(ui, tr, None, tr.t("About", "حول البرنامج"), |ui| {
                             ui.label(format!("{APP_TITLE} v{APP_VERSION}"));

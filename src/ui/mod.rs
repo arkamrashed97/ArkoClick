@@ -11,6 +11,7 @@ pub mod rtl;
 mod settings;
 mod simple;
 pub mod theme;
+mod updates;
 mod widgets;
 
 use crate::config::{
@@ -111,6 +112,7 @@ pub struct App {
     pub(crate) expanded: HashSet<u64>,
     dark: bool,
     frame_counter: u64,
+    pub(crate) updater: updates::Updater,
 }
 
 impl App {
@@ -127,6 +129,11 @@ impl App {
         }
         // Open on the tab of the first existing task (classic when empty).
         let tab = cfg.clickers().first().map(|c| c.kind()).unwrap_or(ClickerKind::Classic);
+        let updater = updates::Updater::new(
+            &cc.egui_ctx,
+            cfg.check_updates,
+            updates::NotifyPrefs { arabic: cfg.lang() == Lang::Ar, skipped: cfg.skipped_version.clone() },
+        );
         Self {
             cfg,
             engine,
@@ -149,6 +156,7 @@ impl App {
             expanded: HashSet::new(),
             dark: true,
             frame_counter: 0,
+            updater,
         }
     }
 
@@ -1290,6 +1298,7 @@ impl eframe::App for App {
 
         self.poll_picker(ctx);
         self.poll_text_dialog(ctx);
+        self.poll_updates(ctx);
         self.refresh_windows(false);
 
         let rtl = self.tr().ar;
@@ -1297,6 +1306,12 @@ impl eframe::App for App {
         egui::TopBottomPanel::top("header")
             .frame(egui::Frame::new().fill(strip).inner_margin(egui::Margin::symmetric(16, 10)))
             .show(ctx, |ui| self.header(ui, ctx));
+        if self.update_banner_visible() {
+            let fill = if ctx.style().visuals.dark_mode { egui::Color32::from_rgb(0x1B, 0x33, 0x3A) } else { egui::Color32::from_rgb(0xE3, 0xF3, 0xF0) };
+            egui::TopBottomPanel::top("update-banner")
+                .frame(egui::Frame::new().fill(fill).inner_margin(egui::Margin::symmetric(16, 8)))
+                .show(ctx, |ui| self.update_banner(ui, ctx));
+        }
         egui::TopBottomPanel::top("tabs")
             .frame(egui::Frame::side_top_panel(&ctx.style()).inner_margin(egui::Margin::symmetric(14, 8)))
             .show(ctx, |ui| self.tabs(ui));

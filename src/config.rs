@@ -498,6 +498,10 @@ pub struct AppConfig {
     pub lang: Option<Lang>,
     /// UI text size in points.
     pub font_size: f32,
+    /// Look for a new version on GitHub at startup and once a day.
+    pub check_updates: bool,
+    /// Version the user chose to skip ("v0.4.0"); no reminder for it.
+    pub skipped_version: Option<String>,
 
     /// v0.1 single clicker list, migrated into a "Default" profile on load.
     #[serde(skip_serializing)]
@@ -528,6 +532,8 @@ impl Default for AppConfig {
             theme: ThemePref::System,
             lang: Some(lang),
             font_size: 15.0,
+            check_updates: true,
+            skipped_version: None,
             clickers: None,
         }
     }

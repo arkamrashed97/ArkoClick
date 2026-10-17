@@ -4,4 +4,5 @@
 pub mod config;
 pub mod engine;
 pub mod ui;
+pub mod update;
 pub mod win;

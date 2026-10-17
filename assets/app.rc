@@ -2,8 +2,8 @@
 1 24 "app.manifest"
 
 1 VERSIONINFO
-FILEVERSION 0,3,0,0
-PRODUCTVERSION 0,3,0,0
+FILEVERSION 0,4,0,0
+PRODUCTVERSION 0,4,0,0
 FILEOS 0x40004
 FILETYPE 0x1
 BEGIN
@@ -13,12 +13,12 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "Arkam Rashed"
       VALUE "FileDescription", "ArkoClick - background auto clicker"
-      VALUE "FileVersion", "0.3.0"
+      VALUE "FileVersion", "0.4.0"
       VALUE "InternalName", "ArkoClick"
       VALUE "LegalCopyright", "Copyright (C) 2026 Arkam Rashed"
       VALUE "OriginalFilename", "ArkoClick.exe"
       VALUE "ProductName", "ArkoClick"
-      VALUE "ProductVersion", "0.3.0"
+      VALUE "ProductVersion", "0.4.0"
       VALUE "Comments", "Developer: Arkam Rashed - arko313m@gmail.com - +201008446123"
     END
   END

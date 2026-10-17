@@ -224,6 +224,25 @@ impl Engine {
         self.start_after(id, Duration::ZERO);
     }
 
+    /// Start bound to a specific window (the one that triggered a "linked task" prompt), so
+    /// the right browser window is used when several are open.
+    pub fn start_on(&self, id: u64, hwnd: SafeHwnd) {
+        let mut g = self.inner.lock().unwrap();
+        if let Some(rt) = g.clickers.get_mut(&id) {
+            if !rt.status.is_active() && window::is_window(hwnd) {
+                rt.root = Some(hwnd);
+                rt.children.clear();
+            }
+        }
+        Self::start_locked(&mut g, id);
+        self.update_hires(&mut g);
+        self.cv.notify_all();
+    }
+
+    pub fn is_active(&self, id: u64) -> bool {
+        self.inner.lock().unwrap().clickers.get(&id).map_or(false, |r| r.status.is_active())
+    }
+
     /// Start, but wait `delay` before the first action (gives the user time to move the
     /// mouse away from ArkoClick when a classic clicker is started from its window).
     pub fn start_after(&self, id: u64, delay: Duration) {

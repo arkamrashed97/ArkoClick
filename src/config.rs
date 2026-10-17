@@ -74,6 +74,42 @@ impl TargetInfo {
     }
 }
 
+/// Browsers whose window titles carry the page title ("Page - Google Chrome").
+pub const BROWSERS: &[&str] = &["chrome.exe", "msedge.exe", "brave.exe", "firefox.exe", "opera.exe", "vivaldi.exe"];
+
+impl TargetInfo {
+    pub fn is_browser(&self) -> bool {
+        BROWSERS.iter().any(|b| self.process.eq_ignore_ascii_case(b))
+    }
+}
+
+/// Suggested "title contains" text for linking a task to a window: the site name for a browser
+/// page ("YouTube" from "Watch later - YouTube - Google Chrome"), empty (any window of the
+/// program) otherwise. The user can edit it.
+pub fn suggested_title_hint(t: &TargetInfo) -> String {
+    if !t.is_browser() {
+        return String::new();
+    }
+    let norm = t.title.replace(" \u{2014} ", " - ").replace(" \u{2013} ", " - ");
+    let mut parts: Vec<&str> = norm.split(" - ").map(str::trim).filter(|s| !s.is_empty()).collect();
+    // Drop the browser name ("Google Chrome", "Microsoft Edge", "Mozilla Firefox"...).
+    if parts.len() > 1 {
+        parts.pop();
+    }
+    parts.last().map(|s| s.to_string()).unwrap_or_default()
+}
+
+/// "Ask to start this task when its program or page opens."
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(default)]
+pub struct Trigger {
+    pub enabled: bool,
+    /// Program file name ("chrome.exe"). Empty = the task's own target program.
+    pub process: String,
+    /// Only windows whose title contains this text (any case). Empty = any window.
+    pub title_contains: String,
+}
+
 /// Where inside the target's client area to click.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct ClickPoint {
@@ -345,6 +381,8 @@ pub struct ClickerConfig {
     /// While running, turn a minimize of the target into "hidden but running" (many apps,
     /// all Chromium browsers included, ignore input while minimized).
     pub hide_when_minimized: bool,
+    /// Offer to start this task when its program / browser page comes to the front.
+    pub trigger: Trigger,
 
     // ---- v0.1 fields, read once for migration and never written back.
     #[serde(skip_serializing)]
@@ -382,6 +420,7 @@ impl ClickerConfig {
             auto_run: false,
             hotkey: Hotkey::NONE,
             hide_when_minimized: true,
+            trigger: Trigger::default(),
             point: None,
             button: None,
             kind: None,

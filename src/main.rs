@@ -74,7 +74,8 @@ fn main() -> eframe::Result<()> {
             win::hotkey::spawn(bindings, Arc::clone(&engine), move || ctx_hk.request_repaint());
             let ctx_tray = cc.egui_ctx.clone();
             win::tray::spawn(Arc::clone(&engine), move || ctx_tray.request_repaint());
-            win::watch::spawn(Arc::clone(&engine));
+            let ctx_watch = cc.egui_ctx.clone();
+            win::watch::spawn(Arc::clone(&engine), move || ctx_watch.request_repaint());
             Ok(Box::new(ui::App::new(cc, cfg, engine_for_app, start_hidden)))
         }),
     )

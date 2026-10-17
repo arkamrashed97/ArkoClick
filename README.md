@@ -33,6 +33,8 @@ Prefer not to install? Download the **portable zip**, unzip it anywhere, and run
 
 You can keep working while it clicks. Minimize the window or put it behind others and ArkoClick keeps going.
 
+Link a task to a program or a browser page (for example any page with "YouTube" in its title): when it comes to the front, a small box near the clock asks whether to start the saved task.
+
 ArkoClick tells you when a new version is out (a banner in the app and a Windows notification) and can download and install it for you in one click.
 
 Want a classic auto clicker that clicks wherever your mouse is instead? Use the **Classic clicker** tab: set a shortcut such as **F7**, move the mouse anywhere, and press the shortcut to start or stop.
@@ -58,6 +60,8 @@ Try it first with **ArkoClick test page** in the Start menu: choose its green ci
 1. في تبويب «النقر البسيط» اضغط «اختر المكان على الشاشة» ثم انقر على المكان المطلوب.
 2. اختر السرعة.
 3. اضغط «تشغيل»، وللإيقاف اضغط «إيقاف» أو F6، وF8 يوقف كل شيء.
+
+**ربط المهام:** يمكنك ربط مهمة ببرنامج أو بصفحة في المتصفح (مثل أي صفحة في عنوانها YouTube)، وعند ظهورها في المقدمة يظهر مربع صغير بجوار الساعة يسألك هل تريد تشغيل المهمة المحفوظة.
 
 **التحديث:** يخبرك ArkoClick عند صدور إصدار جديد (شريط داخل البرنامج وإشعار من ويندوز)، ويمكنه تنزيله وتثبيته بضغطة واحدة.
 
@@ -104,6 +108,11 @@ Try it first with **ArkoClick test page** in the Start menu: choose its green ci
 - **Many clickers at once**, on different windows or the same one, all driven by **one
   scheduler thread** (a min-heap of deadlines on a condvar). Idle CPU is zero.
 - **Profiles**: named sets of clickers (New / Copy / Rename / Delete) to switch between.
+- **Linked tasks**: a task can be linked to its program, or to browser pages whose title
+  contains a given text. A WinEvent hook notices when such a window comes to the front (or the
+  front window's title changes, e.g. a tab switch) and a native, non-activating box asks
+  whether to start; "Start" binds the task to that exact window. Asks once per window per
+  30 minutes; "Don't ask again" turns the link off.
 - **Updates**: checks GitHub's latest release at startup and daily (can be turned off in
   Settings), shows a banner and a Windows notification, then downloads the installer through
   Windows' own `curl.exe`, verifies its SHA-256 against the checksum GitHub publishes, and

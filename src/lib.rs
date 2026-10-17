@@ -3,6 +3,7 @@
 
 pub mod config;
 pub mod engine;
+pub mod triggers;
 pub mod ui;
 pub mod update;
 pub mod win;

@@ -68,6 +68,7 @@ pub(crate) enum TextTarget {
     StepText(u64, usize),
     NewProfile,
     ProfileName(usize),
+    TriggerTitle(u64),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -113,6 +114,7 @@ pub struct App {
     dark: bool,
     frame_counter: u64,
     pub(crate) updater: updates::Updater,
+    last_links: Option<(Vec<crate::triggers::Rule>, bool, bool)>,
 }
 
 impl App {
@@ -157,6 +159,7 @@ impl App {
             dark: true,
             frame_counter: 0,
             updater,
+            last_links: None,
         }
     }
 
@@ -401,6 +404,10 @@ impl App {
             }
             TextTarget::NewProfile => (tr.s("New profile", "ملف جديد"), tr.s("Profile name:", "اسم الملف:")),
             TextTarget::ProfileName(_) => (tr.s("Rename profile", "تغيير اسم الملف"), tr.s("Profile name:", "اسم الملف:")),
+            TextTarget::TriggerTitle(_) => (
+                tr.s("Which window?", "أي نافذة؟"),
+                tr.s("Ask only when the window title contains (leave empty for any window):", "اسأل فقط عندما يحتوي عنوان النافذة على (اتركه فارغًا لأي نافذة):"),
+            ),
         };
         let spec = TextDialogSpec {
             title: title.into(),
@@ -448,6 +455,11 @@ impl App {
             TextTarget::ProfileName(i) => {
                 if !text.trim().is_empty() && i < self.cfg.profiles.len() {
                     self.cfg.profiles[i].name = text.trim().into();
+                }
+            }
+            TextTarget::TriggerTitle(id) => {
+                if let Some(c) = self.clicker_mut(id) {
+                    c.trigger.title_contains = text.trim().to_string();
                 }
             }
         }
@@ -830,7 +842,7 @@ impl App {
                                     tr.s("Follows mouse cursor", "يتبع مؤشر الماوس").to_string()
                                 }
                             } else if c.target.is_set() {
-                                app_name(&c.target)
+                                if c.trigger.enabled { format!("🔔  {}", app_name(&c.target)) } else { app_name(&c.target) }
                             } else {
                                 tr.s("No spot chosen yet", "لم يتم اختيار المكان بعد").to_string()
                             };
@@ -1169,6 +1181,77 @@ impl App {
         });
     }
 
+    /// Keep the window watcher's linked-task rules in step with the config, and apply
+    /// "don't ask again" answers given in the prompt.
+    fn sync_links(&mut self, ctx: &Context) {
+        let disabled = crate::win::watch::take_disabled();
+        if !disabled.is_empty() {
+            for c in self.cfg.clickers_mut().iter_mut().filter(|c| disabled.contains(&c.id)) {
+                c.trigger.enabled = false;
+            }
+            self.mark_dirty();
+        }
+        let rules = crate::triggers::build_rules(self.cfg.clickers());
+        let state = (rules, self.tr().ar, ctx.style().visuals.dark_mode);
+        if self.last_links.as_ref() != Some(&state) {
+            crate::win::watch::set_links(state.0.clone(), state.1, state.2);
+            self.last_links = Some(state);
+        }
+    }
+
+    /// "Ask me to start this task when … opens" switch + title text, shown in the
+    /// "where" card once a window is chosen. Edits `trig`; returns true when it changed.
+    pub(crate) fn trigger_ui(
+        ui: &mut egui::Ui,
+        tr: Tr,
+        id: u64,
+        trig: &mut crate::config::Trigger,
+        target: &TargetInfo,
+        acts: &mut Vec<Act>,
+    ) -> bool {
+        let mut changed = false;
+        ui.add_space(6.0);
+        let label = if target.is_browser() {
+            tr.t("🔔  Ask me to start this task when this page opens", "🔔  اسألني لتشغيل هذه المهمة عند فتح هذه الصفحة")
+        } else if tr.ar {
+            tr.d(format!("🔔  اسألني لتشغيل هذه المهمة عند فتح {}", app_name(target)))
+        } else {
+            tr.d(format!("🔔  Ask me to start this task when {} opens", app_name(target)))
+        };
+        let mut on = trig.enabled;
+        if switch(ui, tr, &mut on, label) {
+            trig.enabled = on;
+            if on && trig.process.is_empty() {
+                trig.process = target.process.clone();
+            }
+            if on && trig.title_contains.is_empty() {
+                trig.title_contains = crate::config::suggested_title_hint(target);
+            }
+            changed = true;
+        }
+        if trig.enabled {
+            tr.row_wrap(ui, |ui| {
+                ui.label(tr.muted(ui, "Window title contains:", "عنوان النافذة يحتوي على:"));
+                let shown = if trig.title_contains.trim().is_empty() {
+                    tr.t("(any window of this program)", "(أي نافذة لهذا البرنامج)")
+                } else {
+                    semibold(tr.v(&trig.title_contains))
+                };
+                ui.label(shown);
+                if ui.small_button(tr.t("✎  Change", "✎  تغيير")).clicked() {
+                    acts.push(Act::EditText(TextTarget::TriggerTitle(id), trig.title_contains.clone(), false));
+                }
+            });
+            // Wrapped by `para` (egui would cut a long Arabic line instead of wrapping it).
+            let hint = tr.s(
+                "When it comes to the front, a small box near the clock asks whether to start. For browser pages, use a word from the page title shown on its tab (e.g. YouTube).",
+                "عند ظهورها في المقدمة يظهر مربع صغير بجوار الساعة يسألك هل تريد التشغيل. لصفحات المتصفح استخدم كلمة من عنوان الصفحة الظاهر على التبويب (مثل YouTube).",
+            );
+            tr.para(ui, hint, Some(muted_color(ui)), true);
+        }
+        changed
+    }
+
     // ------------------------------------------------------------------ dialogs
 
     fn confirm_dialog(&mut self, ctx: &Context) {
@@ -1299,6 +1382,7 @@ impl eframe::App for App {
         self.poll_picker(ctx);
         self.poll_text_dialog(ctx);
         self.poll_updates(ctx);
+        self.sync_links(ctx);
         self.refresh_windows(false);
 
         let rtl = self.tr().ar;

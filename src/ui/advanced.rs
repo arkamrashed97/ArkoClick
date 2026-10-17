@@ -34,6 +34,7 @@ impl App {
         let windows = self.windows_cache.clone();
         let mut changed = false;
         let mut ops = Vec::new();
+        let mut trig = self.cfg.clickers()[idx].trigger.clone();
 
         let c = &mut self.cfg.clickers_mut()[idx];
         // 1. Window
@@ -50,6 +51,9 @@ impl App {
                     }
                 });
                 ui.label(tr.muted_d(ui, truncate(&target.title, 70)).small());
+                if App::trigger_ui(ui, tr, id, &mut trig, &target, &mut acts) {
+                    changed = true;
+                }
             } else {
                 tr.para_t(
                     ui,
@@ -91,6 +95,10 @@ impl App {
                     });
             });
         });
+
+        if trig != c.trigger {
+            c.trigger = trig.clone();
+        }
 
         // 2. Steps
         card(ui, tr, Some(2), tr.t("Steps  (run in order, then repeat)", "الخطوات  (تُنفَّذ بالترتيب ثم تتكرر)"), |ui| {

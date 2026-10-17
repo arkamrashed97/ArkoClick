@@ -54,6 +54,7 @@ impl App {
         let target = self.cfg.clickers()[idx].target.clone();
         let picked = target.is_set();
         let mut changed = false;
+        let mut trig = self.cfg.clickers()[idx].trigger.clone();
 
         // 1. Where
         card(ui, tr, Some(1), tr.t("Where should it click?", "أين يضغط؟"), |ui| {
@@ -77,8 +78,14 @@ impl App {
                         acts.push(Act::Test(id, 0));
                     }
                 });
+                if App::trigger_ui(ui, tr, id, &mut trig, &target, &mut acts) {
+                    changed = true;
+                }
             }
         });
+        if trig != self.cfg.clickers()[idx].trigger {
+            self.cfg.clickers_mut()[idx].trigger = trig;
+        }
 
         {
             let c = &mut self.cfg.clickers_mut()[idx];

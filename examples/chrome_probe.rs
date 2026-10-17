@@ -125,7 +125,7 @@ fn main() {
 
     // The real-life case: the user minimizes the browser in the middle of a run, with the
     // window watcher active exactly as in the app.
-    arkoclick::win::watch::spawn(std::sync::Arc::clone(&engine));
+    arkoclick::win::watch::spawn(std::sync::Arc::clone(&engine), || {});
     std::thread::sleep(Duration::from_millis(300));
     let (c0, _) = counters(h);
     cfg.hide_when_minimized = true;

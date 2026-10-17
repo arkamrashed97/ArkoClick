@@ -5,6 +5,7 @@ pub mod ghost;
 pub mod hotkey;
 pub mod input;
 pub mod picker;
+pub mod prompt;
 pub mod screen;
 pub mod textdlg;
 pub mod timer;

@@ -48,6 +48,7 @@ impl App {
         let capture = self.capture;
         let tex = self.thumb_tex(ui.ctx(), thumb.as_deref());
         let mut changed = false;
+        let mut trig = self.cfg.clickers()[idx].trigger.clone();
 
         let c = &mut self.cfg.clickers_mut()[idx];
         // 1. Where
@@ -77,8 +78,14 @@ impl App {
                         tr.t("Click that spot before typing (puts the cursor in the box)", "انقر على هذا المكان قبل الكتابة (لوضع المؤشر في الخانة)"),
                     );
                 }
+                if App::trigger_ui(ui, tr, id, &mut trig, &target, &mut acts) {
+                    changed = true;
+                }
             }
         });
+        if trig != c.trigger {
+            c.trigger = trig;
+        }
 
         // 2. What
         card(ui, tr, Some(2), tr.t("What should it do?", "ماذا يفعل؟"), |ui| {

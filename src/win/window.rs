@@ -96,6 +96,13 @@ pub fn info_of(h: SafeHwnd) -> WindowInfo {
     WindowInfo { hwnd: h, title: title_of(h), class: class_of(h), pid, process: process_name(pid) }
 }
 
+/// True when the mouse cursor is over one of ArkoClick's own windows. The classic clicker
+/// never clicks there, so it can't press its own Stop / Start buttons.
+pub fn cursor_over_own_process() -> bool {
+    let (x, y) = super::screen::cursor_pos();
+    root_at(x, y).map_or(false, |h| pid_of(h) == std::process::id())
+}
+
 /// Top-level ancestor of the window at a screen point (None when nothing is there).
 pub fn root_at(x: i32, y: i32) -> Option<SafeHwnd> {
     unsafe {

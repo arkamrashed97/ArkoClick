@@ -6,7 +6,7 @@
 ; Start-menu and optional desktop shortcuts, optional "start with Windows", clean uninstall.
 
 #define AppName "ArkoClick"
-#define AppVersion "0.2.0"
+#define AppVersion "0.3.0"
 #define AppPublisher "Arkam Rashed"
 #define AppExe "ArkoClick.exe"
 #define AppContact "arko313m@gmail.com"

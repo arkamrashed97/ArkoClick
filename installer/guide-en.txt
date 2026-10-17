@@ -12,6 +12,7 @@ Good to know:
 - Keep using your computer: ArkoClick never moves your mouse.
 - It keeps working even if the window is minimized or behind other windows.
 - The "Keyboard" tab presses a key or types a text automatically.
+- The "Classic clicker" tab clicks wherever your mouse is: give it a shortcut (for example F7) and press it to start or stop.
 - Change the language or switch to night mode with the buttons at the top.
 - F8 stops everything immediately.
 

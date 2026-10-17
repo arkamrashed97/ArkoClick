@@ -1,6 +1,6 @@
 [package]
 name = "arkoclick"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "ArkoClick - multi-target background auto clicker for Windows"
 authors = ["Arkam Rashed <arko313m@gmail.com>"]

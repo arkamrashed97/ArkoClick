@@ -5,7 +5,7 @@
 //! Each clicker runs its steps in order (click / key / text), waiting each step's
 //! `wait_ms` before the next, and loops.
 
-use crate::config::{Action, ClickMode, ClickerConfig};
+use crate::config::{Action, ClickMode, ClickerConfig, ClickerKind};
 use crate::win::{ghost, input, timer::HighResTimer, window, SafeHwnd};
 use rand::Rng;
 use std::cmp::Reverse;
@@ -63,6 +63,8 @@ pub struct ClickerStats {
     pub last_client_size: (i32, i32),
     /// Index of the step that runs next.
     pub step: usize,
+    /// Countdown before the first action (classic clicker started from the window).
+    pub starts_in: Option<Duration>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -93,6 +95,8 @@ struct Runtime {
     /// by the scheduler loop *outside* the lock (cross-process window calls can block).
     pending_hide: Option<SafeHwnd>,
     autohide_blocked_until: Option<Instant>,
+    /// First action is scheduled for this moment (start countdown).
+    delay_until: Option<Instant>,
 }
 
 impl Runtime {
@@ -114,6 +118,7 @@ impl Runtime {
             step: 0,
             pending_hide: None,
             autohide_blocked_until: None,
+            delay_until: None,
         }
     }
 
@@ -216,18 +221,28 @@ impl Engine {
     // ------------------------------------------------------------------ control
 
     pub fn start(&self, id: u64) {
+        self.start_after(id, Duration::ZERO);
+    }
+
+    /// Start, but wait `delay` before the first action (gives the user time to move the
+    /// mouse away from ArkoClick when a classic clicker is started from its window).
+    pub fn start_after(&self, id: u64, delay: Duration) {
         let mut g = self.inner.lock().unwrap();
-        Self::start_locked(&mut g, id);
+        Self::start_locked_at(&mut g, id, Instant::now() + delay);
         self.update_hires(&mut g);
         self.cv.notify_all();
     }
 
     fn start_locked(g: &mut Inner, id: u64) {
+        Self::start_locked_at(g, id, Instant::now());
+    }
+
+    fn start_locked_at(g: &mut Inner, id: u64, at: Instant) {
         let Some(rt) = g.clickers.get_mut(&id) else { return };
         if rt.status.is_active() {
             return;
         }
-        if !rt.cfg.target.is_set() {
+        if rt.cfg.kind() != ClickerKind::Classic && !rt.cfg.target.is_set() {
             rt.status = Status::Error("no target window selected".into());
             return;
         }
@@ -240,11 +255,12 @@ impl Engine {
         rt.rounds = 0;
         rt.step = first;
         rt.elapsed_before = Duration::ZERO;
-        rt.started = Some(Instant::now());
+        rt.started = Some(at);
         rt.status = Status::Running;
         rt.children.clear();
         rt.last_rebind = None;
-        g.heap.push(Reverse(Deadline(Instant::now(), id, rt.gen)));
+        rt.delay_until = (at > Instant::now()).then_some(at);
+        g.heap.push(Reverse(Deadline(at, id, rt.gen)));
     }
 
     pub fn stop(&self, id: u64) {
@@ -289,9 +305,12 @@ impl Engine {
         rt.status = status;
     }
 
+    /// Start every task except classic clickers: those click wherever the mouse is, so they
+    /// only start from their own shortcut or button, never from "start all".
     pub fn start_all(&self) {
         let mut g = self.inner.lock().unwrap();
-        let ids: Vec<u64> = g.clickers.keys().copied().collect();
+        let ids: Vec<u64> =
+            g.clickers.iter().filter(|(_, rt)| rt.cfg.kind() != ClickerKind::Classic).map(|(id, _)| *id).collect();
         for id in ids {
             Self::start_locked(&mut g, id);
         }
@@ -342,6 +361,7 @@ impl Engine {
             .iter()
             .map(|(id, rt)| {
                 let live = rt.root.filter(|h| window::is_window(*h));
+                let target_found = if rt.cfg.kind() == ClickerKind::Classic { true } else { live.is_some() };
                 (
                     *id,
                     ClickerStats {
@@ -349,10 +369,14 @@ impl Engine {
                         count: rt.count,
                         rounds: rt.rounds,
                         elapsed: rt.elapsed(),
-                        target_found: live.is_some(),
+                        target_found,
                         root: live.map(|h| h.0),
                         last_client_size: rt.last_client_size,
                         step: rt.step,
+                        starts_in: rt
+                            .delay_until
+                            .filter(|_| rt.status.is_active())
+                            .and_then(|t| t.checked_duration_since(Instant::now())),
                     },
                 )
             })
@@ -366,8 +390,14 @@ impl Engine {
         if step >= rt.cfg.steps.len() {
             return Err("no such step".into());
         }
-        rt.last_rebind = None;
-        Self::ensure_target(rt)?;
+        if rt.cfg.kind() == ClickerKind::Classic {
+            if window::cursor_over_own_process() {
+                return Err("cursor is over ArkoClick".into());
+            }
+        } else {
+            rt.last_rebind = None;
+            Self::ensure_target(rt)?;
+        }
         Self::fire(rt, step)
     }
 
@@ -455,18 +485,28 @@ impl Engine {
             return None;
         };
         rt.step = idx;
+        rt.delay_until = None;
 
-        if let Err(reason) = Self::ensure_target(rt) {
-            rt.status = Status::Waiting(reason);
-            return Some(now + REBIND_EVERY);
+        if rt.cfg.kind() == ClickerKind::Classic && window::cursor_over_own_process() {
+            // Never click ArkoClick itself (its Stop button sits under the cursor right after
+            // pressing Start). Skip this beat without counting it.
+            rt.status = Status::Running;
+            return Some(now + Duration::from_millis(rt.cfg.steps[idx].wait_ms.clamp(1, 3_600_000)));
         }
 
-        if let Some(root) = rt.root {
-            let blocked = rt.autohide_blocked_until.map_or(false, |t| now < t);
-            if rt.auto_hides() && !blocked && window::is_iconic(root) && !ghost::is_ghosted(root) {
-                // Hide first (done by the loop outside the lock), then fire right after.
-                rt.pending_hide = Some(root);
-                return Some(now + Duration::from_millis(30));
+        if rt.cfg.kind() != ClickerKind::Classic {
+            if let Err(reason) = Self::ensure_target(rt) {
+                rt.status = Status::Waiting(reason);
+                return Some(now + REBIND_EVERY);
+            }
+
+            if let Some(root) = rt.root {
+                let blocked = rt.autohide_blocked_until.map_or(false, |t| now < t);
+                if rt.auto_hides() && !blocked && window::is_iconic(root) && !ghost::is_ghosted(root) {
+                    // Hide first (done by the loop outside the lock), then fire right after.
+                    rt.pending_hide = Some(root);
+                    return Some(now + Duration::from_millis(30));
+                }
             }
         }
 
@@ -537,6 +577,19 @@ impl Engine {
 
     /// Deliver step `idx` to the resolved target.
     fn fire(rt: &mut Runtime, idx: usize) -> Result<(), String> {
+        if rt.cfg.kind() == ClickerKind::Classic {
+            let action = rt.cfg.steps[idx].action.clone();
+            return match action {
+                Action::Click { button, kind, .. } => {
+                    if input::send_mouse_click_here(button, kind) {
+                        Ok(())
+                    } else {
+                        Err("SendInput rejected".into())
+                    }
+                }
+                Action::Key { .. } | Action::Text { .. } => Err("keys not supported in classic mode".into()),
+            };
+        }
         let root = rt.root.ok_or("no window")?;
         let iconic = window::is_iconic(root);
         if !iconic {

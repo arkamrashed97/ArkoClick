@@ -1,9 +1,10 @@
-//! Main window. Three tabs (simple clicker, advanced clicker, keyboard), each with its own
+//! Main window. Four tabs (classic, simple, advanced, keyboard), each with its own
 //! list of tasks and a step-by-step editor. Everything is translated (English / Arabic,
 //! mirrored layout in Arabic) and follows the light/dark/system theme.
 //! Repaints only while something is running.
 
 mod advanced;
+mod classic;
 mod keyboard;
 mod keys;
 pub mod rtl;
@@ -33,6 +34,8 @@ use widgets::{big_button, card, chip, spot_picture, status_pill, switch, Tr};
 const SAVE_DEBOUNCE: Duration = Duration::from_millis(800);
 /// Wait after the "click the text box first" step of a keyboard task.
 const FOCUS_WAIT_MS: u64 = 150;
+/// Countdown before a classic clicker started from the window clicks for the first time.
+const CLASSIC_START_DELAY: Duration = Duration::from_secs(3);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum PickPurpose {
@@ -122,8 +125,8 @@ impl App {
         if start_hidden {
             cc.egui_ctx.send_viewport_cmd(ViewportCommand::Visible(false));
         }
-        // Open on the tab of the first existing task (simple when empty).
-        let tab = cfg.clickers().first().map(|c| c.kind()).unwrap_or(ClickerKind::Simple);
+        // Open on the tab of the first existing task (classic when empty).
+        let tab = cfg.clickers().first().map(|c| c.kind()).unwrap_or(ClickerKind::Classic);
         Self {
             cfg,
             engine,
@@ -286,7 +289,13 @@ impl App {
     fn new_clicker(&mut self, kind: ClickerKind) {
         let id = self.cfg.alloc_id();
         let n = self.cfg.clickers().iter().filter(|c| c.kind() == kind).count() + 1;
-        let c = ClickerConfig::new_of_kind(id, kind, n, self.cfg.lang());
+        let mut c = ClickerConfig::new_of_kind(id, kind, n, self.cfg.lang());
+        if kind == ClickerKind::Classic {
+            let mut used: Vec<Hotkey> = self.cfg.clickers().iter().map(|c| c.hotkey).collect();
+            used.push(self.cfg.hotkey_toggle_all);
+            used.push(self.cfg.hotkey_stop_all);
+            c.hotkey = crate::config::find_available_classic_hotkey(&used);
+        }
         self.cfg.clickers_mut().push(c);
         self.selected.insert(kind, id);
         self.tab = kind;
@@ -554,7 +563,16 @@ impl App {
                         )
                     }
                 },
-                Act::Toggle(id) => self.engine.toggle(id),
+                Act::Toggle(id) => {
+                    let classic = self.cfg.clickers().iter().any(|c| c.id == id && c.kind() == ClickerKind::Classic);
+                    let active = self.stats.get(&id).map_or(false, |s| s.status.is_active());
+                    if classic && !active {
+                        // Started from the window: give the user time to move the mouse.
+                        self.engine.start_after(id, CLASSIC_START_DELAY);
+                    } else {
+                        self.engine.toggle(id);
+                    }
+                }
                 Act::EditText(t, initial, multiline) => self.open_text(t, initial, multiline),
                 Act::Capture(c) => {
                     if self.capture == Some(c) {
@@ -649,6 +667,7 @@ impl App {
         let tr = self.tr();
         let size = self.cfg.font_size;
         let tabs = [
+            (ClickerKind::Classic, "🎯", "Classic clicker", "النقر الكلاسيكي"),
             (ClickerKind::Simple, "🖱", "Simple clicker", "النقر البسيط"),
             (ClickerKind::Advanced, "☰", "Advanced clicker", "النقر المتقدم"),
             (ClickerKind::Keyboard, "⌨", "Keyboard", "لوحة المفاتيح"),
@@ -741,6 +760,7 @@ impl App {
         let selected = self.selected_in(kind);
         let mut acts = Vec::new();
         let new_label = match kind {
+            ClickerKind::Classic => tr.s("+  New classic clicker", "+  مهمة نقر كلاسيكي جديدة"),
             ClickerKind::Simple => tr.s("+  New clicker", "+  مهمة نقر جديدة"),
             ClickerKind::Advanced => tr.s("+  New advanced task", "+  مهمة متقدمة جديدة"),
             ClickerKind::Keyboard => tr.s("+  New typing task", "+  مهمة كتابة جديدة"),
@@ -781,7 +801,7 @@ impl App {
                                         .on_hover_text(tr.v(if active { tr.s("Stop", "إيقاف") } else { tr.s("Start", "تشغيل") }))
                                         .clicked()
                                     {
-                                        if c.target.is_set() {
+                                        if c.kind() == ClickerKind::Classic || c.target.is_set() {
                                             acts.push(Act::Toggle(c.id));
                                         } else {
                                             acts.push(Act::Select(kind, c.id));
@@ -795,7 +815,13 @@ impl App {
                                     let _ = text;
                                 });
                             });
-                            let sub = if c.target.is_set() {
+                            let sub = if c.kind() == ClickerKind::Classic {
+                                if c.hotkey.is_set() {
+                                    format!("{}  ·  {}", c.hotkey.label(), tr.s("Follows cursor", "يتبع المؤشر"))
+                                } else {
+                                    tr.s("Follows mouse cursor", "يتبع مؤشر الماوس").to_string()
+                                }
+                            } else if c.target.is_set() {
                                 app_name(&c.target)
                             } else {
                                 tr.s("No spot chosen yet", "لم يتم اختيار المكان بعد").to_string()
@@ -823,6 +849,13 @@ impl App {
         let tr = self.tr();
         let kind = self.tab;
         let (title, body) = match kind {
+            ClickerKind::Classic => (
+                tr.s("Classic mouse autoclicker", "الأوتوكليكر الكلاسيكي للماوس"),
+                tr.s(
+                    "Clicks automatically at your mouse cursor's current position as you move it around. Press the shortcut key anywhere to start or stop clicking instantly.",
+                    "ينقر تلقائيًا في المكان الحالي لمؤشر الماوس أثناء تحريكه بحرية. اضغط زر الاختصار من أي مكان لتشغيل النقر أو إيقافه فورًا.",
+                ),
+            ),
             ClickerKind::Simple => (
                 tr.s("Click automatically on any spot", "انقر تلقائيًا على أي مكان"),
                 tr.s(
@@ -846,6 +879,7 @@ impl App {
             ),
         };
         let new_label = match kind {
+            ClickerKind::Classic => tr.s("+  Create a classic clicker", "+  أنشئ مهمة نقر كلاسيكي"),
             ClickerKind::Simple => tr.s("+  Create my first clicker", "+  أنشئ أول مهمة نقر"),
             ClickerKind::Advanced => tr.s("+  Create an advanced task", "+  أنشئ مهمة متقدمة"),
             ClickerKind::Keyboard => tr.s("+  Create a typing task", "+  أنشئ مهمة كتابة"),
@@ -881,7 +915,7 @@ impl App {
             tr.far(ui, |ui| {
                 let (label, fill) =
                     if active { (tr.s("■  Stop", "■  إيقاف"), DANGER) } else { (tr.s("▶  Start", "▶  تشغيل"), ACCENT_STRONG) };
-                let ready = c.target.is_set();
+                let ready = c.kind() == ClickerKind::Classic || c.target.is_set();
                 let resp = ui.add_enabled(ready, |ui: &mut egui::Ui| big_button(ui, tr.d(label), fill, 150.0));
                 if resp.clicked() {
                     acts.push(Act::Toggle(id));
@@ -898,12 +932,21 @@ impl App {
                 let n = if c.kind() == ClickerKind::Keyboard { s.rounds } else { s.count };
                 let unit = match c.kind() {
                     ClickerKind::Keyboard => tr.s("times", "مرة"),
-                    ClickerKind::Simple => tr.s("clicks", "نقرة"),
+                    ClickerKind::Classic | ClickerKind::Simple => tr.s("clicks", "نقرة"),
                     ClickerKind::Advanced => tr.s("actions", "خطوة"),
                 };
                 ui.label(tr.muted_d(ui, format!("·  {n} {unit}  ·  {}", fmt_duration(s.elapsed, tr))));
             }
-            if self.cfg.hotkey_toggle_all.is_set() && !active {
+            if c.hotkey.is_set() && !active {
+                tr.far(ui, |ui| {
+                    let hint = if tr.ar {
+                        format!("أو اضغط {} للتشغيل/الإيقاف", c.hotkey.label())
+                    } else {
+                        format!("or press {} to start/stop", c.hotkey.label())
+                    };
+                    ui.label(tr.muted_d(ui, hint).small());
+                });
+            } else if self.cfg.hotkey_toggle_all.is_set() && !active {
                 tr.far(ui, |ui| {
                     let hint = if tr.ar {
                         format!("أو اضغط {} لتشغيل/إيقاف الكل", self.cfg.hotkey_toggle_all.label())
@@ -914,6 +957,15 @@ impl App {
                 });
             }
         });
+        if let Some(d) = st.as_ref().and_then(|s| s.starts_in) {
+            let secs = d.as_secs() + 1;
+            let msg = if tr.ar {
+                format!("يبدأ خلال {secs} ث، حرّك الماوس إلى المكان الذي تريد النقر عليه")
+            } else {
+                format!("Starting in {secs} s. Move the mouse to where you want to click.")
+            };
+            ui.label(tr.d(msg).color(WARN).size(self.cfg.font_size + 1.0));
+        }
         if let Some(Status::Waiting(_)) = st.as_ref().map(|s| &s.status) {
             ui.label(tr.t(
                 "The window is closed. Open the program again and ArkoClick will continue on its own.",
@@ -1050,7 +1102,7 @@ impl App {
                 &mut c.hide_when_minimized,
                 tr.t("Keep working when the window is minimized", "استمر في العمل عند تصغير النافذة"),
             );
-            if kind != ClickerKind::Keyboard {
+            if kind != ClickerKind::Keyboard && kind != ClickerKind::Classic {
                 let mut game = c.mode == ClickMode::Foreground;
                 if switch(
                     ui,
@@ -1270,6 +1322,7 @@ impl eframe::App for App {
                     ui.add_space(4.0);
                     let tr = self.tr();
                     tr.column(ui, |ui| match self.tab {
+                        ClickerKind::Classic => self.classic_editor(ui, id),
                         ClickerKind::Simple => self.simple_editor(ui, id),
                         ClickerKind::Advanced => self.advanced_editor(ui, id),
                         ClickerKind::Keyboard => self.keyboard_editor(ui, id),

@@ -14,7 +14,7 @@
 
 <p align="center">
   <img src="docs/screenshot-en.png" width="49%" alt="ArkoClick in English, day mode">
-  <img src="docs/screenshot-ar.png" width="49%" alt="ArkoClick in Arabic, night mode">
+  <img src="docs/screenshot-ar.png" width="49%" alt="ArkoClick classic clicker in Arabic, night mode">
 </p>
 
 ## Install
@@ -32,6 +32,8 @@ Prefer not to install? Download the **portable zip**, unzip it anywhere, and run
 3. Press **Start**. Press **Stop** or **F6** to stop, or **F8** to stop everything at once.
 
 You can keep working while it clicks. Minimize the window or put it behind others and ArkoClick keeps going.
+
+Want a classic auto clicker that clicks wherever your mouse is instead? Use the **Classic clicker** tab: set a shortcut such as **F7**, move the mouse anywhere, and press the shortcut to start or stop.
 Try it first with **ArkoClick test page** in the Start menu: choose its green circle as the spot and watch the counter.
 
 ## بالعربي
@@ -55,6 +57,8 @@ Try it first with **ArkoClick test page** in the Start menu: choose its green ci
 2. اختر السرعة.
 3. اضغط «تشغيل»، وللإيقاف اضغط «إيقاف» أو F6، وF8 يوقف كل شيء.
 
+**النقر الكلاسيكي:** تبويب «النقر الكلاسيكي» ينقر في مكان مؤشر الماوس أينما حركته. عيّن له اختصارًا مثل F7، ثم اضغطه للتشغيل أو الإيقاف.
+
 </div>
 
 ## Contact
@@ -67,9 +71,10 @@ Try it first with **ArkoClick test page** in the Start menu: choose its green ci
 
 ## Made for everyone
 
-- **Three tabs.** *Simple clicker*: choose a spot, choose a speed, press Start. *Advanced
-  clicker*: sequences of clicks, keys and text with every option. *Keyboard*: press a key or
-  type a text into a window, repeatedly.
+- **Four tabs.** *Classic clicker*: clicks wherever your mouse is; start and stop it with a
+  shortcut (F7 by default for new tasks). *Simple clicker*: choose a spot, choose a speed,
+  press Start. *Advanced clicker*: sequences of clicks, keys and text with every option.
+  *Keyboard*: press a key or type a text into a window, repeatedly.
 - **Step-by-step cards** (1, 2, 3, 4) with big buttons, speed presets in plain words
   ("Normal · 5/sec"), and a zoomed picture of the exact spot that will be clicked.
 - **English and Arabic.** The Arabic interface is fully translated and mirrored
@@ -119,7 +124,8 @@ Text steps typed 95 of 95 characters (Arabic included) both visible and hidden.
 ## Known limits
 
 - Apps that read **raw input / DirectInput** (most games) ignore posted messages. Use
-  Foreground mode for those (it moves the real cursor and needs the window visible).
+  Foreground mode for those (it moves the real cursor and needs the window visible), or the
+  Classic clicker tab.
 - Clicking into a window that runs **as administrator** requires ArkoClick to run as
   administrator too (UIPI).
 - **Key steps** produce the character of the target's active keyboard layout (A types "ش"

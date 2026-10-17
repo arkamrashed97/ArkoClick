@@ -258,11 +258,24 @@ pub fn is_function_key(vk: u32) -> bool {
     (0x70..=0x87).contains(&vk)
 }
 
+/// Choose a default hotkey for a new classic clicker that doesn't conflict with existing hotkeys.
+pub fn find_available_classic_hotkey(used: &[Hotkey]) -> Hotkey {
+    for vk in [0x76 /* F7 */, 0x78 /* F9 */, 0x79 /* F10 */, 0x7A /* F11 */, 0x7B /* F12 */] {
+        let candidate = Hotkey::key(vk);
+        if !used.contains(&candidate) {
+            return candidate;
+        }
+    }
+    Hotkey::NONE
+}
+
 // ---------------------------------------------------------------------------- kinds / prefs
 
 /// Which tab a clicker lives in, and therefore which editor it gets.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum ClickerKind {
+    /// Classic mouse autoclicker: clicks wherever the mouse cursor is located.
+    Classic,
     /// One spot, clicked repeatedly.
     #[default]
     Simple,
@@ -417,6 +430,8 @@ impl ClickerConfig {
         let mut c = Self::new(id);
         c.tab = Some(kind);
         c.name = match (kind, lang) {
+            (ClickerKind::Classic, Lang::Ar) => format!("كلاسيكي {n}"),
+            (ClickerKind::Classic, Lang::En) => format!("Classic {n}"),
             (ClickerKind::Keyboard, Lang::Ar) => format!("كتابة {n}"),
             (ClickerKind::Keyboard, Lang::En) => format!("Typing {n}"),
             (ClickerKind::Advanced, Lang::Ar) => format!("متقدم {n}"),
@@ -426,6 +441,9 @@ impl ClickerConfig {
         };
         if kind == ClickerKind::Keyboard {
             c.steps = vec![Step::new(Action::Key { vk: 0x20 }, 1000)];
+        } else if kind == ClickerKind::Classic {
+            c.hotkey = Hotkey::key(0x76); // F7 default hotkey
+            c.mode = ClickMode::Foreground;
         }
         c
     }
@@ -489,13 +507,18 @@ pub struct AppConfig {
 impl Default for AppConfig {
     fn default() -> Self {
         let lang = Lang::system_default();
+        // The starter classic task has no shortcut: a global F7 would be taken from every
+        // other program even for people who never use the classic clicker.
+        let mut classic = ClickerConfig::new_of_kind(1, ClickerKind::Classic, 1, lang);
+        classic.hotkey = Hotkey::NONE;
+        let simple = ClickerConfig::new_of_kind(2, ClickerKind::Simple, 1, lang);
         Self {
             profiles: vec![Profile {
                 name: if lang == Lang::Ar { "الافتراضي".into() } else { "Default".into() },
-                clickers: vec![ClickerConfig::new_of_kind(1, ClickerKind::Simple, 1, lang)],
+                clickers: vec![classic, simple],
             }],
             active_profile: 0,
-            next_id: 2,
+            next_id: 3,
             autostart: false,
             start_minimized: false,
             close_to_tray: true,

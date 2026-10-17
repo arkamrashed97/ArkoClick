@@ -82,6 +82,24 @@ pub fn send_input_click(x: i32, y: i32, button: MouseButton, kind: ClickKind) ->
     unsafe { SendInput(&inputs, std::mem::size_of::<INPUT>() as i32) == n }
 }
 
+/// Inject a real click at the mouse's current physical position on screen without moving it.
+/// Windows sends down and up events wherever the cursor is located at this instant.
+pub fn send_mouse_click_here(button: MouseButton, kind: ClickKind) -> bool {
+    let (down, up) = match button {
+        MouseButton::Left => (MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP),
+        MouseButton::Right => (MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP),
+        MouseButton::Middle => (MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP),
+    };
+    let mut inputs = vec![mouse_input(0, 0, down), mouse_input(0, 0, up)];
+    if kind == ClickKind::Double {
+        inputs.push(mouse_input(0, 0, down));
+        inputs.push(mouse_input(0, 0, up));
+    }
+    let n = inputs.len() as u32;
+    unsafe { SendInput(&inputs, std::mem::size_of::<INPUT>() as i32) == n }
+}
+
+
 /// Post one key press (down + up) to a window. The target's own message loop runs
 /// `TranslateMessage`, so printable keys also produce `WM_CHAR` there.
 /// Modifier state cannot be faked this way (the target reads its own keyboard state),

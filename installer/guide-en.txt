@@ -1,4 +1,4 @@
-﻿ArkoClick is installed.
+ArkoClick is installed.
 
 How to use it in 3 steps:
 
@@ -21,6 +21,8 @@ Good to know:
 To try it: open "ArkoClick test page" from the Start menu, choose the green circle as the spot, and watch the counter.
 
 Help:
-Arkam Rashed
-arko313m@gmail.com
+Arqam Rashed
+Website: https://arqamrashed.com
+Email: me@arkamrashed.com
 WhatsApp: +201008446123
+LinkedIn: https://www.linkedin.com/in/arqam-m-aa5327ba

@@ -1,4 +1,4 @@
-﻿; ArkoClick installer (Inno Setup 6).
+; ArkoClick installer (Inno Setup 6).
 ; Build:  "D:\programs\InnoSetup6\ISCC.exe" installer\ArkoClick.iss
 ; Output: dist\ArkoClick-Setup.exe
 ;
@@ -7,9 +7,10 @@
 
 #define AppName "ArkoClick"
 #define AppVersion "0.4.0"
-#define AppPublisher "Arkam Rashed"
+#define AppPublisher "Arqam Rashed"
 #define AppExe "ArkoClick.exe"
-#define AppContact "arko313m@gmail.com"
+#define AppContact "me@arkamrashed.com"
+#define AppURL "https://arqamrashed.com"
 #define AppSupport "https://wa.me/201008446123"
 
 [Setup]
@@ -19,7 +20,7 @@ AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
 AppPublisher={#AppPublisher}
 AppContact={#AppContact}
-AppPublisherURL={#AppSupport}
+AppPublisherURL={#AppURL}
 AppSupportURL={#AppSupport}
 DefaultDirName={localappdata}\Programs\{#AppName}
 DefaultGroupName={#AppName}

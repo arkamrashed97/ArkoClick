@@ -71,7 +71,7 @@ Try it first with **ArkoClick test page** in the Start menu: choose its green ci
 
 ## Contact
 
-**Arkam Rashed** · arko313m@gmail.com · WhatsApp [+201008446123](https://wa.me/201008446123)
+**Arqam Rashed / أرقم راشد** · Website: [arqamrashed.com](https://arqamrashed.com) · Email: [me@arkamrashed.com](mailto:me@arkamrashed.com) · WhatsApp: [+201008446123](https://wa.me/201008446123) · LinkedIn: [Arqam Rashed](https://www.linkedin.com/in/arqam-m-aa5327ba)
 
 ---
 

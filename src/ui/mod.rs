@@ -16,8 +16,8 @@ mod widgets;
 
 use crate::config::{
     is_function_key, Action, AppConfig, ClickPoint, ClickerConfig, ClickerKind, ClickMode, Hotkey, Lang, Profile,
-    Step, TargetInfo, APP_TITLE, APP_VERSION, DEFAULT_WAIT_MS, DEVELOPER, DEVELOPER_EMAIL, DEVELOPER_PHONE,
-    THUMB_SIZE,
+    Step, TargetInfo, APP_TITLE, APP_VERSION, DEFAULT_WAIT_MS, DEVELOPER, DEVELOPER_AR, DEVELOPER_EMAIL,
+    DEVELOPER_LINKEDIN, DEVELOPER_PHONE, DEVELOPER_WEBSITE, THUMB_SIZE,
 };
 use crate::engine::{ClickerStats, Engine, Status};
 use crate::win::picker::{self, PickOutcome, PickResult, Picker};
@@ -753,6 +753,8 @@ impl App {
         ui.horizontal_wrapped(|ui| {
             let muted = muted_color(ui);
             ui.label(RichText::new(format!("© 2026 {DEVELOPER}")).color(muted));
+            ui.separator();
+            ui.hyperlink_to("arqamrashed.com", DEVELOPER_WEBSITE);
             ui.separator();
             ui.label(RichText::new("Email").color(muted));
             ui.hyperlink_to(DEVELOPER_EMAIL, format!("mailto:{DEVELOPER_EMAIL}"));

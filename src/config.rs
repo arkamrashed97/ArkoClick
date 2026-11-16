@@ -7,9 +7,12 @@ use std::path::PathBuf;
 
 pub const APP_TITLE: &str = "ArkoClick";
 pub const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
-pub const DEVELOPER: &str = "Arkam Rashed";
-pub const DEVELOPER_EMAIL: &str = "arko313m@gmail.com";
+pub const DEVELOPER: &str = "Arqam Rashed";
+pub const DEVELOPER_AR: &str = "أرقم راشد";
+pub const DEVELOPER_EMAIL: &str = "me@arkamrashed.com";
 pub const DEVELOPER_PHONE: &str = "+201008446123";
+pub const DEVELOPER_WEBSITE: &str = "https://arqamrashed.com";
+pub const DEVELOPER_LINKEDIN: &str = "https://www.linkedin.com/in/arqam-m-aa5327ba";
 
 // ---------------------------------------------------------------------------- basic enums
 

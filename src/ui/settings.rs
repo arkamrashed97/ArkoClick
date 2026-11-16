@@ -189,7 +189,11 @@ impl App {
                             ui.label(format!("{APP_TITLE} v{APP_VERSION}"));
                             tr.row(ui, |ui| {
                                 ui.label(tr.muted(ui, "Developer:", "المطور:"));
-                                ui.label(DEVELOPER);
+                                ui.label(tr.t(DEVELOPER, DEVELOPER_AR));
+                            });
+                            tr.row(ui, |ui| {
+                                ui.label(tr.muted(ui, "Website:", "الموقع:"));
+                                ui.hyperlink_to("arqamrashed.com", DEVELOPER_WEBSITE);
                             });
                             tr.row(ui, |ui| {
                                 ui.label(tr.muted(ui, "Email:", "البريد:"));
@@ -198,6 +202,10 @@ impl App {
                             tr.row(ui, |ui| {
                                 ui.label(tr.muted(ui, "Phone / WhatsApp:", "الهاتف / واتساب:"));
                                 ui.hyperlink_to(DEVELOPER_PHONE, format!("https://wa.me/{}", DEVELOPER_PHONE.trim_start_matches('+')));
+                            });
+                            tr.row(ui, |ui| {
+                                ui.label(tr.muted(ui, "LinkedIn:", "لينكدإن:"));
+                                ui.hyperlink_to("linkedin.com/in/arqam-m-aa5327ba", DEVELOPER_LINKEDIN);
                             });
                         });
 

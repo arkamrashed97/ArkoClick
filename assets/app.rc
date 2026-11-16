@@ -11,15 +11,15 @@ BEGIN
   BEGIN
     BLOCK "040904B0"
     BEGIN
-      VALUE "CompanyName", "Arkam Rashed"
+      VALUE "CompanyName", "Arqam Rashed"
       VALUE "FileDescription", "ArkoClick - background auto clicker"
       VALUE "FileVersion", "0.4.0"
       VALUE "InternalName", "ArkoClick"
-      VALUE "LegalCopyright", "Copyright (C) 2026 Arkam Rashed"
+      VALUE "LegalCopyright", "Copyright (C) 2026 Arqam Rashed"
       VALUE "OriginalFilename", "ArkoClick.exe"
       VALUE "ProductName", "ArkoClick"
       VALUE "ProductVersion", "0.4.0"
-      VALUE "Comments", "Developer: Arkam Rashed - arko313m@gmail.com - +201008446123"
+      VALUE "Comments", "Developer: Arqam Rashed - https://arqamrashed.com - me@arkamrashed.com - +201008446123"
     END
   END
   BLOCK "VarFileInfo"
